@@ -63,7 +63,8 @@ Below is a breakdown of the website's four core systems and detailed functions:
 I. Core Data and Integrity Score Control Panel (Part 1) 
 This is the operational hub of the entire website, primarily responsible for handling the identity and score permissions of individuals:
 
---Dynamic Identity Switching: Features a quick drop-down menu, allowing real-time switching between multiple individuals. Supports on-site modification of Name/ID, account Handle, or direct file deletion, and also allows one-click creation of new roles. 
+--Dynamic Identity Switching:
+Features a quick drop-down menu, allowing real-time switching between multiple individuals. Supports on-site modification of Name/ID, account Handle, or direct file deletion, and also allows one-click creation of new roles. 
 --Dual Review Mode Switching: 
  - "⚠ Deduction/Punishment Mode": Once activated, the form switches to punishment settings, handling integrity score deductions.
  - "🌟 Bonus/Praise Mode": Once activated, the form switches to reward settings, used to commend performance.
