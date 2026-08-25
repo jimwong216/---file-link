@@ -66,36 +66,7 @@ https://index--72.vercel.app/
  
  --一鍵快取清理： 頂部設有 🧹 清除第四至第八部分 的終極快捷鍵，能瞬間抹除所有歷史追蹤紀錄，方便系統重設或進行季度盤點。
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+--------------------------------------------------------------------------------------------------------------
 
 
 This website is the "Social Discipline Review Committee - Management System." It's a backend management tool that integrates a database of individuals, dynamic score tracking, automated document generation, and large-capacity backups.
