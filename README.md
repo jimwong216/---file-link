@@ -11,17 +11,24 @@ https://index--72.vercel.app/
 這是整個網站的操作中樞，主要負責處理當事人的身份與分數權限：
 
 --動態身份切換： 設有快速下拉式選單，可在多位當事人之間即時切換。支援現場修改 Name/ID、帳號 Handle、或直接刪除檔案，也能一鍵建立新角色。
+
 --雙重審查模式切換：
  -「⚠ 扣分/處分模式」： 啟動後，表單轉為懲罰設定，處理誠信扣分。
+ 
  -「🌟 加分/表揚模式」： 啟動後，表單轉為獎勵設定，用作嘉許表現。
 
 --誠信積分即時追蹤：
+
  -管理員可自訂該當事人的「誠信總分」（畫面預設為 100）。
+ 
  -系統會顯示「當前誠信積分」（畫面中 當事人 剩餘 100 分）。
+ 
  -具備 🔄 自動追蹤以往分數 功能，每次加減分都會與歷史紀錄連動更新。
  
  --時間與編號自動化：
+ 
   -⚡ 即時獲取當前時間： 一鍵精準抓取發信/簽發日期的「時分秒」。
+  
   -🎲 自動生成編號： 隨機演算法自動為每份公文生成不重複的檔案編號。
   
   --雙向 30 款預設理由庫： 內建「處分」與「表揚」兩套完整的 30 款預設理由選單，管理員能快速點選加入，亦可自行撰寫新事由並 💾 存入預設選單 供日後使用。
@@ -31,7 +38,9 @@ https://index--72.vercel.app/
   當資料填寫完畢後，系統提供「一鍵雙開」的高效輸出功能：
   
    --⚡ 自動一鍵補齊全部資料： 若時間或編號留白，系統會自動填滿所有必需欄位。
+   
    --✅ 確認資料並生成 PDF： 點擊後，系統會即時將所有事由繪製到 PDF 內，同時在背景完成自動存檔並直接觸發瀏覽器下載正式通告。
+   
   --電郵內文完整復刻： 系統會根據您填寫的獎懲數據，自動排版成一封正式的官方通知電郵，並提供「複製內文並存檔」的快捷鍵。
   
 
@@ -39,16 +48,22 @@ https://index--72.vercel.app/
 為了防止漏洞，系統將所有產出的公文與行為拆解成五個獨立的追蹤區塊：
   
 -4. 全域歷史檢視表： 跨當事人的總數據庫。以表格呈現所有發起時間、檔案編號、當事人、分數變動及事由詳情。
+
 -5. 當事人專屬電郵紀錄： 專門記錄發給特定當事人的電郵發送時間、分數變動與內文摘要。
-- 6. 即時違規外顯標示表： 此處會以顯眼的顏色與標籤標示每次違規。最便利的是支援點擊直接下載該次歷史 PDF，不必重新生成。 
+
+- 6. 即時違規外顯標示表： 此處會以顯眼的顏色與標籤標示每次違規。最便利的是支援點擊直接下載該次歷史 PDF，不必重新生成。
+      
 -7 & 8. 以往違規與嘉許紀錄（獨立分流）：
+
  -系統將「懲罰紀錄」與「獎勵紀錄」徹底分開存放，方便調閱。
+ 
  -特設防重複殘影技術： 針對長篇幅報告，規定「第二頁起 3cm 留白」，確保多頁列印或轉存時，排版絕對工整且文字不會重疊。
  
  
  四、 大容量 Blob 備份與清理機制
  
  --無限累積 Blob 備份引擎： 專為海量 PDF 與高頻率更新的歷史檔案設計。管理員可以使用 📤 匯出備份 將全站數據打包下載，或使用 📥 匯入還原 將舊檔案無損回復。
+ 
  --一鍵快取清理： 頂部設有 🧹 清除第四至第八部分 的終極快捷鍵，能瞬間抹除所有歷史追蹤紀錄，方便系統重設或進行季度盤點。
 
 
@@ -65,39 +80,56 @@ This is the operational hub of the entire website, primarily responsible for han
 
 --Dynamic Identity Switching:
 Features a quick drop-down menu, allowing real-time switching between multiple individuals. Supports on-site modification of Name/ID, account Handle, or direct file deletion, and also allows one-click creation of new roles. 
+
 --Dual Review Mode Switching: 
  - "⚠ Deduction/Punishment Mode": Once activated, the form switches to punishment settings, handling integrity score deductions.
+   
  - "🌟 Bonus/Praise Mode": Once activated, the form switches to reward settings, used to commend performance.
 
 --Real-time Integrity Score Tracking: 
+
  - Administrators can customize the individual's "Total Integrity Score" (the default screen value is 100).
+   
  - The system will display the "Current Integrity Score" (the individual has 100 points remaining on the screen).
+   
  - It features 🔄 Automatic tracking of past scores; each point increase or decrease is updated in conjunction with historical records.
 
 --Automatic Time and Numbering:
 -⚡ Instantaneous Time Acquisition: Accurately captures the hour, minute, and second of the sending/issuing date with a single click.
+
 -🎲 Automatic Number Generation: A random algorithm automatically generates unique file numbers for each document.
 
---Dual-Use 30 Preset Reasons Library: Includes two complete sets of 30 preset reasons for "Discipline" and "Praise." Administrators can quickly add these reasons or create their own and save them to the preset menus for future use.
+--Dual-Use 30 Preset Reasons Library: 
+Includes two complete sets of 30 preset reasons for "Discipline" and "Praise." Administrators can quickly add these reasons or create their own and save them to the preset menus for future use.
 
 
 II. Automated Document and Email Output Engine (Parts 2 & 3) 
 After the data is filled in, the system provides a highly efficient "one-click dual-open" output function:
 
 --⚡ Automatic One-Click Data Completion: If the time or number is blank, the system will automatically fill in all required fields. 
+
 --✅ Confirm Data and Generate PDF: After clicking, the system will immediately draw all the details into the PDF, automatically archive it in the background, and directly trigger the browser to download the official announcement.
+
 -- Complete Email Content Replication: The system will automatically format a formal official notification email based on the reward and punishment data you filled in, and provide a shortcut key for "copy the content and archive".
 
 III. Five-Dimensional Historical Records and Global View Table (Parts 4-8) 
 To prevent loopholes, the system breaks down all generated documents and behaviors into five independent tracking blocks:
 
---4. Global Historical View Table: A comprehensive database across all parties involved. Presents all initiation times, file numbers, parties involved, score changes, and details of the events in a table format. --5. Personalized Email Records: Records emails sent to specific individuals, including sending time, score changes, and content summaries.
+--4. Global Historical View Table: 
+A comprehensive database across all parties involved. Presents all initiation times, file numbers, parties involved, score changes, and details of the events in a table format. 
+
+--5. Personalized Email Records: Records emails sent to specific individuals, including sending time, score changes, and content summaries.
+
 --6. Real-time Violation Display Table: Violations are highlighted with prominent colors and labels. The most convenient feature is the ability to directly download the historical PDF without regenerating it.
+
 --7 & 8. Past Violations and Awards Records (Separate Streaming):
+
  - The system completely separates "penalty records" and "reward records" for easy retrieval.
+   
  - Special Anti-Duplicate Image Technology: For long reports, a 3cm margin is specified from the second page onwards to ensure neat layout and no text overlap when printing or transferring multiple pages.
 
 IV. Large-Capacity Blob Backup and Cleanup Mechanism
 
 --Unlimited Cumulative Blob Backup Engine: Designed for massive amounts of PDFs and frequently updated historical files. Administrators can use 📤 to export backups to download all site data in a package, or use 📥 to import and restore old files without loss.
+
 --One-click quick cleanup: The top features a 🧹 ultimate shortcut to clear sections four through eight, instantly erasing all historical tracking records for easy system reset or quarterly review.
