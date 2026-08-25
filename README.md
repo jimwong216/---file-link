@@ -71,6 +71,33 @@ https://index--72.vercel.app/
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 This website is the "Social Discipline Review Committee - Management System." It's a backend management tool that integrates a database of individuals, dynamic score tracking, automated document generation, and large-capacity backups.
 
 Below is a breakdown of the website's four core systems and detailed functions:
