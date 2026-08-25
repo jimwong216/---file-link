@@ -1,0 +1,1774 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>社交紀律審查委員會 - 無限累積極致備份版</title>
+    <!-- 引入 jsPDF 套件 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { background-color: #f1f5f9; margin: 0; padding: 10px; color: #1e293b; font-size: 13px; }
+        .container { max-width: 980px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; }
+        .card { background: #ffffff; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; }
+        .header { background: #0f172a; color: #ffffff; padding: 12px; border-radius: 8px; }
+        .header h1 { margin: 0 0 4px 0; font-size: 16px; }
+        .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; }
+        .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; }
+        label { display: block; font-size: 11px; font-weight: bold; margin-bottom: 2px; color: #475569; }
+        input, select, textarea { width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 12px; background: #fff; }
+        button { background: #1e293b; color: #ffffff; border: none; padding: 8px 10px; border-radius: 4px; font-size: 12px; cursor: pointer; font-weight: bold; }
+        .btn-indigo { background: #4f46e5; }
+        .btn-emerald { background: #059669; }
+        .btn-red { background: #dc2626; }
+        .btn-amber { background: #d97706; }
+        .btn-sm { font-size: 10px; padding: 4px 6px; }
+        ul { list-style: none; padding: 0; margin: 5px 0 0 0; }
+        li { background: #f8fafc; border: 1px solid #e2e8f0; padding: 6px; margin-bottom: 4px; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; font-size: 11px; }
+        table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 5px; }
+        th, td { border: 1px solid #cbd5e1; padding: 6px; text-align: left; word-break: break-all; }
+        th { background: #f1f5f9; }
+        .flex-between { display: flex; justify-content: space-between; align-items: center; }
+        .mode-btn { flex: 1; padding: 10px; text-align: center; font-weight: bold; border-radius: 4px; cursor: pointer; border: 1px solid #cbd5e1; background: #e2e8f0; color: #334155; }
+        .mode-active-deduct { background: #dc2626 !important; color: #fff !important; }
+        .mode-active-add { background: #059669 !important; color: #fff !important; }
+        .confirm-box { background: #eff6ff; border: 1px solid #93c5fd; padding: 10px; border-radius: 6px; margin-top: 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+        .person-manager-box { background: #f8fafc; border: 1px solid #cbd5e1; padding: 8px; border-radius: 6px; margin-bottom: 10px; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        
+        <!-- Header -->
+        <div class="header flex-between">
+            <div>
+                <h1>社交紀律審查委員會 - 管理系統</h1>
+                <p style="margin:0; font-size:10px; color:#94a3b8;">無限累積極致備份版：專為海量 PDF 與歷史檔案設計的大容量 Blob 備份引擎</p>
+            </div>
+            <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+                <input type="file" id="importFileInput" accept=".json" style="display:none;" onchange="importDataFromFile(event)">
+                <button type="button" class="btn-amber btn-sm" onclick="clearSections4To8()">🧹 清除第四至第八部分</button>
+                <button type="button" class="btn-emerald btn-sm" onclick="exportDataToFile()">📤 匯出備份</button>
+                <button type="button" class="btn-indigo btn-sm" onclick="document.getElementById('importFileInput').click()">📥 匯入還原</button>
+            </div>
+        </div>
+
+        <!-- 模式切換 -->
+        <div class="card" style="padding: 8px;">
+            <div style="display:flex; gap:8px;">
+                <button type="button" id="btnModeDeduct" class="mode-btn mode-active-deduct" onclick="switchMode('deduct')">⚠️ 扣分/處分模式</button>
+                <button type="button" id="btnModeAdd" class="mode-btn" onclick="switchMode('add')">🌟 加分/表揚模式</button>
+            </div>
+        </div>
+
+        <!-- 1. 基本資料與理由設定 -->
+        <div class="card">
+            <h3 style="margin-top:0; border-bottom: 1px solid #eee; padding-bottom: 4px; font-size: 14px;">1. 資料與理由設定</h3>
+            
+            <div class="person-manager-box">
+                <div style="flex: 2; min-width: 160px;">
+                    <label>👥 快速切換當事人：</label>
+                    <select id="personSelect" onchange="selectPersonFromDropdown()">
+                        <option value="">-- 請選擇已有當事人 --</option>
+                    </select>
+                </div>
+                <div style="flex: auto; align-self: flex-end; display:flex; gap:4px;">
+                    <button type="button" class="btn-indigo btn-sm" onclick="openEditPersonModal()" style="height:32px;">✏️ 修改名稱與帳號</button>
+                    <button type="button" class="btn-red btn-sm" onclick="deleteCurrentPerson()" style="height:32px;">🗑️ 刪除</button>
+                </div>
+                <div style="flex: 1.5; min-width: 100px;">
+                    <label>新名字 Name/ID</label>
+                    <input type="text" id="newPersonName" placeholder="例如: Alex">
+                </div>
+                <div style="flex: 1.5; min-width: 100px;">
+                    <label>新帳號 Handle</label>
+                    <input type="text" id="newPersonHandle" placeholder="例如: alex_99">
+                </div>
+                <div style="flex: 1; min-width: 80px; align-self: flex-end;">
+                    <button type="button" class="btn-indigo" onclick="addNewPerson()" style="width:100%;">＋ 新增</button>
+                </div>
+            </div>
+
+            <div class="grid-3">
+                <div>
+                    <label>當事人 Name/ID</label>
+                    <input type="text" id="targetName" value="Megan" oninput="onTargetNameChanged()">
+                </div>
+                <div>
+                    <label>當事人帳號 Handle</label>
+                    <input type="text" id="targetHandle" value="meg._.an" oninput="updateUI()">
+                </div>
+                <div>
+                    <label>誠信積分總分 (可自訂)</label>
+                    <input type="number" id="maxScore" value="100" oninput="updateUI()" style="font-weight:bold; color:#475569;">
+                </div>
+                <div>
+                    <label>當前誠信積分</label>
+                    <input type="number" id="currentScore" value="85" oninput="updateUI()" style="font-weight:bold; color:#0f172a;">
+                    <button type="button" class="btn-indigo btn-sm" onclick="syncScoreFromHistory()" style="margin-top:4px; width:100%;">🔄 自動追蹤以往分數</button>
+                </div>
+                <div>
+                    <label id="scoreActionLabel">本次扣分數目</label>
+                    <input type="number" id="scoreValue" value="5" oninput="updateUI()">
+                </div>
+                <div>
+                    <label>發信/簽發日期 (含時分秒)</label>
+                    <input type="text" id="issueDate" value="" oninput="updateUI()">
+                    <button type="button" class="btn-indigo btn-sm" onclick="setCurrentTime()" style="margin-top:4px; width:100%;">⚡ 即時獲取當前時間</button>
+                </div>
+                <div>
+                    <label>檔案編號 (自動/手動)</label>
+                    <input type="text" id="docNo" value="" oninput="updateUI()">
+                    <button type="button" class="btn-indigo btn-sm" onclick="generateDocNo()" style="margin-top:4px; width:100%;">🎲 自動生成編號</button>
+                </div>
+            </div>
+
+            <div style="margin-top: 10px; border-top: 1px solid #eee; padding-top: 8px;">
+                
+                <!-- 扣分 30 款預選單 -->
+                <div id="deductSelectContainer">
+                    <label>選擇預設處分理由 (30 款完整選單)：</label>
+                    <div style="display:flex; gap:6px;">
+                        <select id="presetDeductSelect">
+                            <option value="">-- 請選擇扣分/罰則理由 --</option>
+                        </select>
+                        <button type="button" class="btn-indigo" onclick="addDeductPreset()" style="white-space:nowrap;">加入理由</button>
+                    </div>
+                </div>
+
+                <!-- 加分 30 款預選單 -->
+                <div id="addSelectContainer" style="display:none;">
+                    <label>選擇預設表揚理由 (30 款完整選單)：</label>
+                    <div style="display:flex; gap:6px;">
+                        <select id="presetAddSelect">
+                            <option value="">-- 請選擇加分/獎勵理由 --</option>
+                        </select>
+                        <button type="button" class="btn-emerald" onclick="addAddPreset()" style="white-space:nowrap;">加入理由</button>
+                    </div>
+                </div>
+
+                <div style="display:flex; gap: 6px; margin-top: 8px; flex-wrap: wrap;">
+                    <input type="text" id="customReasonInput" placeholder="手寫輸入理由 (支援中文、英文)..." style="flex: 2; min-width: 200px;" oninput="onCustomInputChanged()">
+                    <button type="button" class="btn-indigo" onclick="addCustomReason()" style="white-space:nowrap;">＋ 加入本次事由</button>
+                    <button type="button" class="btn-emerald" onclick="saveCustomReasonToPreset()" style="white-space:nowrap;">💾 存入預設選單</button>
+                </div>
+
+                <label style="margin-top: 8px;">已生效事由清單 (所有項目將即時繪製至 PDF)：</label>
+                <ul id="reasonList"></ul>
+
+                <div class="confirm-box">
+                    <button type="button" class="btn-amber" onclick="autoFillAllData()">⚡ 自動一鍵補齊全部資料 (自動生成編號/日期/分數)</button>
+                    <button type="button" class="btn-emerald" onclick="confirmAndSaveRecord()" style="font-size:13px; padding:8px 16px;">✅ 確認資料並生成 PDF（自動存檔並自動下載通告）</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. 電郵與通告預覽 -->
+        <div class="grid-2">
+            <div class="card">
+                <div class="flex-between" style="margin-bottom: 4px;">
+                    <h3 style="margin:0; font-size: 14px;">2. 自動生成電郵內容 (完整復刻版)</h3>
+                    <button type="button" class="btn-indigo" onclick="copyAndSaveEmail()">複製內文並存檔</button>
+                </div>
+                <textarea id="emailOutput" rows="22" readonly style="font-family: monospace; font-size: 11px; line-height: 1.4;"></textarea>
+            </div>
+
+            <div class="card">
+                <div class="flex-between" style="margin-bottom: 4px;">
+                    <h3 style="margin:0; font-size: 14px;">3. 正式通告檔預覽 (僅現時處罰紀錄)</h3>
+                    <button type="button" class="btn-red" onclick="downloadImageDoc()">下載正式 PDF 通告檔</button>
+                </div>
+
+                <div style="text-align: center; background: #f8fafc; padding: 4px; border: 1px solid #cbd5e1; border-radius: 4px;">
+                    <canvas id="pdfCanvas" style="max-width: 100%; height: auto; background: #fff; border: 1px solid #ddd;"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. 資料確定位置紀錄歷史表格（全域） -->
+        <div class="card">
+            <div class="flex-between">
+                <h3 style="margin:0; font-size: 14px;">4. 資料確定位置紀錄歷史表 (全域檢視：所有扣分與加分紀錄)</h3>
+                <button type="button" class="btn-sm btn-red" onclick="clearPermanentRecords()">清空第四部分紀錄</button>
+            </div>
+            <table>
+                <thead>
+                    <tr><th>發起時間</th><th>檔案編號</th><th>當事人</th><th>類型</th><th>分數變動</th><th>事由詳情</th><th>操作</th></tr>
+                </thead>
+                <tbody id="permRecordsTableBody"></tbody>
+            </table>
+        </div>
+
+        <!-- 5. 已複製電郵紀錄 -->
+        <div class="card">
+            <div class="flex-between">
+                <h3 style="margin:0; font-size: 14px;">5. 已複製電郵歷史紀錄 (當事人專屬)</h3>
+                <button type="button" class="btn-sm btn-red" onclick="clearEmailHistory()">清空第五部分電郵</button>
+            </div>
+            <table>
+                <thead>
+                    <tr><th>時間</th><th>當事人</th><th>變動</th><th>摘要</th><th>操作</th></tr>
+                </thead>
+                <tbody id="emailHistoryTableBody"></tbody>
+            </table>
+        </div>
+
+        <!-- 6. 檔案上載與歷史保存 -->
+        <div class="card">
+            <div class="flex-between">
+                <h3 style="margin:0; font-size: 14px;">6. 每一次即時違規紀錄 (外顯加減分標示 - 支援點擊下載 PDF)</h3>
+                <div>
+                    <input type="file" id="pdfFileInput" accept="application/pdf,image/*" style="display:none;" onchange="uploadPDF(event)">
+                    <button type="button" class="btn-indigo btn-sm" onclick="triggerFileInput()">上載紀錄</button>
+                    <button type="button" class="btn-sm btn-red" onclick="clearPdfHistory()">清空第六部分紀錄</button>
+                </div>
+            </div>
+            <table>
+                <thead>
+                    <tr><th>時間</th><th>編號/檔名</th><th>當事人</th><th>加減分標示</th><th>摘要</th><th>操作</th></tr>
+                </thead>
+                <tbody id="pdfHistoryTableBody"></tbody>
+            </table>
+        </div>
+
+        <!-- 7. 查看以往違規紀錄 -->
+        <div class="card">
+            <div class="flex-between">
+                <h3 style="margin:0; font-size: 14px;">7. 查看以往違規紀錄 (防重複殘影、第二頁起 3cm 留白)</h3>
+                <button type="button" class="btn-sm btn-red" onclick="clearPermRecordsTable('deduct')">清空第七部分違規</button>
+            </div>
+            <table>
+                <thead>
+                    <tr><th>發起時間</th><th>檔案編號</th><th>類型</th><th>分數變動</th><th>違規紀錄</th><th>操作</th></tr>
+                </thead>
+                <tbody id="section7TableBody"></tbody>
+            </table>
+        </div>
+
+        <!-- 8. 查看以往嘉許紀錄 -->
+        <div class="card">
+            <div class="flex-between">
+                <h3 style="margin:0; font-size: 14px;">8. 查看以往嘉許紀錄 (防重複殘影、第二頁起 3cm 留白)</h3>
+                <button type="button" class="btn-sm btn-red" onclick="clearPermRecordsTable('add')">清空第八部分嘉許</button>
+            </div>
+            <table>
+                <thead>
+                    <tr><th>發起時間</th><th>檔案編號</th><th>類型</th><th>分數變動</th><th>嘉許紀錄</th><th>操作</th></tr>
+                </thead>
+                <tbody id="section8TableBody"></tbody>
+            </table>
+        </div>
+
+    </div>
+
+    <script>
+        var currentMode = 'deduct';
+        var activeReasons = [];
+
+        var emailHistory = [];
+        var pdfHistory = [];
+        var permanentRecords = [];
+        
+        var personList = [
+            { name: "Megan", handle: "meg._.an" },
+            { name: "Alex", handle: "alex_99" },
+            { name: "Chris", handle: "chris.c" }
+        ];
+
+        var defaultDeductPresets = [
+            "多次虛構通話意圖、擅離、睡眠滋擾。",
+            "虛構通話意圖：多次以通話為名，實則於通話途中未經任何說明即自行去睡覺並直接掛斷電話（收線）。",
+            "嚴重干擾社交秩序：多次於通話進行中直接入睡並發出巨大鼻鼾聲，極度滋擾其他參與者。",
+            "濫用社交資源：將公用/朋友通話當作個人睡眠背景音，缺乏實質互動。",
+            "無故突發性掛斷：通話期間未經任何交代突然離線，不尊重其他參與者時間與體驗。",
+            "承諾失信：多次承諾 " + "可以 Call / 語音" + "，但通話建立後即時無回應或離開。",
+            "社交誠信虛報：提供虛假離線理由，實則私下進行其他社交活動或入睡。",
+            "多次無視委員會警告：接獲初次口頭警告後仍屢教不改，重複相同違規行為。",
+            "拒絕溝通與反省：對受影響參與者之合理溝通要求採取迴避或極不友善態度。",
+            "約定通話無故遲到：與他人預約語音時間後無故遲到逾 30 分鐘且未事先通知。",
+            "頻繁無意義掛斷重撥：於短時間內多次無故掛斷並重複撥打，對他人造成精神困擾。",
+            "開麥播放高分貝背景噪音：長期於極度嘈雜環境或播放大音量音樂時開麥，拒絕改善。",
+            "突發性刺耳噪音騷擾：於通話進行期間無預警發出刺耳高音或故意敲擊麥克風。",
+            "語音期間使用冒犯性言詞：於社交頻道通話期間使用不當言詞、辱罵或進行人身攻擊。",
+            "私自錄音或公開語音內容：未經全體參與者同意，私自對語音通話進行錄音或向外轉播。",
+            "捏造事實推卸責任：為規避懲戒處分而捏造虛假事實，試圖推卸責任或誣陷他人。",
+            "無故干擾他人發言：於他人進行重要語音討論時故意插話、搶麥或發出怪聲。",
+            "惡意散播虛假訊息：於群組通話內散播未經證實之謠言，製造社交恐慌。",
+            "私下騷擾參與者：未經同意私下向語音參與者發送不當訊息造成困擾。",
+            "強迫他人參與通話：使用情緒勒索或言語威脅強迫他人加入語音。",
+            "故意無視通話規則：無視房間設置之禁言或輪流發言規則。",
+            "惡意掛機佔用位置：長時間開啟麥克風但不說話，占用通話資源。",
+            "濫用緊急聯絡功能：非緊急情況下頻繁使用@全員或緊急語音呼叫。",
+            "洩露參與者個人隱私：於語音討論中公開他人未經授權之個人資料。",
+            "消極對抗處分：接獲處分後於社交圈內進行言語煽動或破壞秩序。",
+            "偽造委員會文件：私自修改或偽造社交誠信檔案表格。",
+            "拒絕履行公開道歉：逾期未向受影響參與者提交書面或語音道歉。",
+            "惡意濫用申訴機制：提交無稽之理由惡意拖延處分生效時間。",
+            "通話中途情緒失控暴走：於語音期間無預警大聲咆哮破壞氛圍。",
+            "多次重複輕微違規：累積多次輕微違規事項，性質升級為嚴重警告。"
+        ];
+
+        var defaultAddPresets = [
+            "公開提交切實道歉與反省：針對過往違規提交極具誠意之書面道歉並確實改善。",
+            "主動協助維護通話秩序：於語音期間主動協調秩序，保持良好溝通氛圍。",
+            "按時參與並全程專注：嚴格遵守通話約定時間，全程保持良好互動。",
+            "積極帶動社交氛圍：於通話中展現友善態度，積極協助新成員融入。",
+            "主動提供優質話題討論：為語音頻道提供具建設性與趣味性之討論內容。",
+            "連續 7 天無任何違規紀錄：於觀察期內表現良好，無接獲任何投訴。",
+            "連續 30 天誠信表現優異：長期保持優良社交態度，獲得成員一致好評。",
+            "主動提醒他人維護禮貌：於其他參與者情緒激動時主動緩和氣氛。",
+            "協助委員會整理紀律紀錄：主動提供清晰證據或紀錄協助核實爭議。",
+            "主動改善通話設備品質：積極更換優質麥克風，消除背景雜音。",
+            "配合委員會各項指導建議：對委員會給予之建議展現極高配合度。",
+            "主動調解參與者之間誤會：成功協助兩方參與者化解誤會恢復友好。",
+            "主動分享實用社交經驗：於頻道內分享良好通話禮儀與溝通技巧。",
+            "遵守約定提前告知離線時間：於需要離開前明確告知參與者，尊重他人時間。",
+            "積極參與社區活動籌備：為社交群組活動提供心力與時間支持。",
+            "主動照顧不擅發言之成員：於通話中主動引導較內向成員發言。",
+            "遵守頻道各項臨時規定：於特殊活動期間嚴格遵守房主規定。",
+            "誠實說明個人離線狀況：如實說明無法參與之真實原因，展現誠信。",
+            "主動承擔通話紀錄主持工作：自願協助會議或討論之紀錄整理。",
+            "遭遇不公時保持理性克制：於爭執中保持理性，未引發情緒衝突。",
+            "積極參與社區誠信體系建立：提出具建設性之社交管理建議。",
+            "主動補償過往影響之參與者：以實質行動向過往受影響友人致歉。",
+            "獲得多名參與者聯名推薦加分：獲 3 名以上參與者認可近期良好表現。",
+            "於緊急狀況下冷靜處理：通話突發狀況時協助引導大家冷靜處置。",
+            "嚴格遵守隱私保護原則：絕不未經同意向外流傳語音對話內容。",
+            "主動協助維護語音設備穩定：提供技術建議協助友人調校麥克風。",
+            "保持極高之社交誠信履約率：約定 Call 之次數履約率達 100%。",
+            "主動關懷情緒低落之成員：於語音期間給予友人溫暖支持與鼓勵。",
+            "積極宣揚正面社交價值觀：於社交圈內樹立優良誠信典範。",
+            "完成委員會指定之誠信考驗：通過觀察期考驗，恢復誠信分數。"
+        ];
+
+        var deductPresets = [...defaultDeductPresets];
+        var addPresets = [...defaultAddPresets];
+
+        function initPresetDropdowns() {
+            var selDeduct = document.getElementById('presetDeductSelect');
+            var selAdd = document.getElementById('presetAddSelect');
+            if(selDeduct) {
+                selDeduct.innerHTML = '<option value="">-- 請選擇扣分/罰則理由 --</option>';
+                for(var i=0; i<deductPresets.length; i++) {
+                    selDeduct.innerHTML += '<option value="' + deductPresets[i] + '">' + (i+1) + '. ' + deductPresets[i] + '</option>';
+                }
+            }
+            if(selAdd) {
+                selAdd.innerHTML = '<option value="">-- 請選擇加分/獎勵理由 --</option>';
+                for(var j=0; j<addPresets.length; j++) {
+                    selAdd.innerHTML += '<option value="' + addPresets[j] + '">' + (j+1) + '. ' + addPresets[j] + '</option>';
+                }
+            }
+        }
+
+        // 大容量 Blob 串流備份，保證無限累積的 PDF 檔案與歷史記錄 100% 完整匯出
+        function exportDataToFile() {
+            var payload = {
+                personList: personList,
+                permanentRecords: permanentRecords,
+                emailHistory: emailHistory,
+                pdfHistory: pdfHistory,
+                deductPresets: deductPresets,
+                addPresets: addPresets,
+                exportTime: new Date().toLocaleString()
+            };
+
+            try {
+                var jsonString = JSON.stringify(payload);
+                var blob = new Blob([jsonString], { type: "application/json;charset=utf-8" });
+                var url = URL.createObjectURL(blob);
+                
+                var dlAnchor = document.createElement('a');
+                dlAnchor.href = url;
+                dlAnchor.download = "SDRC_Unlimited_Backup_" + Date.now() + ".json";
+                document.body.appendChild(dlAnchor);
+                dlAnchor.click();
+                document.body.removeChild(dlAnchor);
+                URL.revokeObjectURL(url);
+                
+                var sizeMb = (blob.size / (1024 * 1024)).toFixed(2);
+                alert("📤【無限備份成功】\n已完整匯出所有資料！\n- 永久存檔數：" + permanentRecords.length + "\n- 即時違規/PDF紀錄數：" + pdfHistory.length + "\n- 電郵紀錄數：" + emailHistory.length + "\n- 備份檔案大小：" + sizeMb + " MB");
+            } catch(err) {
+                alert("備份失敗：記憶體不足或瀏覽器儲存上限！錯誤：" + err.message);
+            }
+        }
+
+        function importDataFromFile(event) {
+            var file = event.target.files[0];
+            if (!file) return;
+
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    var parsed = JSON.parse(e.target.result);
+                    if (parsed.personList) personList = parsed.personList;
+                    if (parsed.permanentRecords) permanentRecords = parsed.permanentRecords;
+                    if (parsed.emailHistory) emailHistory = parsed.emailHistory;
+                    if (parsed.pdfHistory) pdfHistory = parsed.pdfHistory;
+                    if (parsed.deductPresets) deductPresets = parsed.deductPresets;
+                    if (parsed.addPresets) addPresets = parsed.addPresets;
+
+                    localStorage.setItem('SDRC_PERSON_LIST_V52', JSON.stringify(personList));
+                    localStorage.setItem('SDRC_PERM_RECS_V52', JSON.stringify(permanentRecords));
+                    localStorage.setItem('SDRC_EM_V52', JSON.stringify(emailHistory));
+                    localStorage.setItem('SDRC_PDF_V52', JSON.stringify(pdfHistory));
+                    localStorage.setItem('SDRC_DEDUCT_PRESETS_V52', JSON.stringify(deductPresets));
+                    localStorage.setItem('SDRC_ADD_PRESETS_V52', JSON.stringify(addPresets));
+
+                    renderPersonDropdown();
+                    initPresetDropdowns();
+                    updateAllTables();
+                    updateUI();
+                    alert("📥【還原成功】海量備份資料已完整加載！");
+                } catch(err) {
+                    alert("匯入失敗：檔案格式不正確或已損壞！");
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = "";
+        }
+
+        function wrapTextByLimit(str, limit) {
+            if (!str) return [""];
+            var clean = str.trim();
+            var lines = [];
+            for (var i = 0; i < clean.length; i += limit) {
+                lines.push(clean.substring(i, i + limit));
+            }
+            return lines;
+        }
+
+        function renderPersonDropdown() {
+            var sel = document.getElementById('personSelect');
+            if (!sel) return;
+            var currentTarget = document.getElementById('targetName').value;
+            sel.innerHTML = '<option value="">-- 請選擇已有當事人 --</option>';
+            for (var i = 0; i < personList.length; i++) {
+                var selectedAttr = (personList[i].name === currentTarget) ? ' selected' : '';
+                sel.innerHTML += '<option value="' + personList[i].name + '|' + personList[i].handle + '"' + selectedAttr + '>' + personList[i].name + ' (@' + personList[i].handle + ')</option>';
+            }
+        }
+
+        function selectPersonFromDropdown() {
+            var sel = document.getElementById('personSelect');
+            if (!sel.value) return;
+            var parts = sel.value.split('|');
+            document.getElementById('targetName').value = parts[0];
+            document.getElementById('targetHandle').value = parts[1];
+            syncScoreFromHistory();
+            updateAllTables();
+            updateUI();
+        }
+
+        function openEditPersonModal() {
+            var currentTarget = document.getElementById('targetName').value.trim();
+            var currentHandle = document.getElementById('targetHandle').value.trim();
+            if (!currentTarget) {
+                alert("當前沒有選定任何當事人！");
+                return;
+            }
+
+            var newNameInput = prompt("請修改當事人的名稱 (Name/ID)：", currentTarget);
+            if (newNameInput === null) return;
+            var trimmedNewName = newNameInput.trim();
+            if (!trimmedNewName) {
+                alert("名稱不能為空！");
+                return;
+            }
+
+            var newHandleInput = prompt("請修改當事人的帳號名稱 (Handle)：", currentHandle);
+            if (newHandleInput === null) return;
+            var trimmedNewHandle = newHandleInput.trim();
+            if (!trimmedNewHandle) {
+                alert("帳號名稱不能為空！");
+                return;
+            }
+
+            var found = false;
+            for (var i = 0; i < personList.length; i++) {
+                if (personList[i].name === currentTarget) {
+                    personList[i].name = trimmedNewName;
+                    personList[i].handle = trimmedNewHandle;
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                personList.push({ name: trimmedNewName, handle: trimmedNewHandle });
+            }
+
+            for (var j = 0; j < permanentRecords.length; j++) {
+                if (permanentRecords[j].name === currentTarget) {
+                    permanentRecords[j].name = trimmedNewName;
+                }
+            }
+            for (var k = 0; k < emailHistory.length; k++) {
+                if (emailHistory[k].name === currentTarget) {
+                    emailHistory[k].name = trimmedNewName;
+                }
+            }
+            for (var p = 0; p < pdfHistory.length; p++) {
+                if (pdfHistory[p].name === currentTarget) {
+                    pdfHistory[p].name = trimmedNewName;
+                    pdfHistory[p].handle = trimmedNewHandle;
+                }
+            }
+
+            document.getElementById('targetName').value = trimmedNewName;
+            document.getElementById('targetHandle').value = trimmedNewHandle;
+
+            saveDataToLocalStorage();
+            renderPersonDropdown();
+            updateAllTables();
+            updateUI();
+            alert("✏️ 成功將當事人名稱與帳號修改為：「" + trimmedNewName + " (@" + trimmedNewHandle + ")」！");
+        }
+
+        function addNewPerson() {
+            var nameInput = document.getElementById('newPersonName').value.trim();
+            var handleInput = document.getElementById('newPersonHandle').value.trim();
+            if (!nameInput || !handleInput) {
+                alert("請完整輸入新當事人的名字與帳號 Handle！");
+                return;
+            }
+            var exists = false;
+            for (var i = 0; i < personList.length; i++) {
+                if (personList[i].name.toLowerCase() === nameInput.toLowerCase()) {
+                    exists = true;
+                    personList[i].handle = handleInput;
+                    break;
+                }
+            }
+            if (!exists) {
+                personList.push({ name: nameInput, handle: handleInput });
+            }
+            try { localStorage.setItem('SDRC_PERSON_LIST_V52', JSON.stringify(personList)); } catch(e) {}
+            
+            document.getElementById('targetName').value = nameInput;
+            document.getElementById('targetHandle').value = handleInput;
+            document.getElementById('newPersonName').value = "";
+            document.getElementById('newPersonHandle').value = "";
+            renderPersonDropdown();
+            syncScoreFromHistory();
+            updateAllTables();
+            updateUI();
+            alert("✅ 成功新增並切換至當事人：「" + nameInput + "」！");
+        }
+
+        function deleteCurrentPerson() {
+            var currentTarget = document.getElementById('targetName').value.trim();
+            if (!currentTarget) {
+                alert("當前沒有選定任何當事人！");
+                return;
+            }
+            if (personList.length <= 1) {
+                alert("名單中至少需保留一位當事人！");
+                return;
+            }
+            if (confirm("確定要刪除當事人「" + currentTarget + "」嗎？")) {
+                var newArr = [];
+                for (var i = 0; i < personList.length; i++) {
+                    if (personList[i].name !== currentTarget) {
+                        newArr.push(personList[i]);
+                    }
+                }
+                personList = newArr;
+                try { localStorage.setItem('SDRC_PERSON_LIST_V52', JSON.stringify(personList)); } catch(e) {}
+                
+                document.getElementById('targetName').value = personList[0].name;
+                document.getElementById('targetHandle').value = personList[0].handle;
+                renderPersonDropdown();
+                syncScoreFromHistory();
+                updateAllTables();
+                updateUI();
+                alert("🗑️ 已成功刪除該當事人，並切換至：「" + personList[0].name + "」");
+            }
+        }
+
+        function onTargetNameChanged() {
+            renderPersonDropdown();
+            updateAllTables();
+            updateUI();
+        }
+
+        function updateAllTables() {
+            renderPermRecordsTable();
+            renderEmailHistory();
+            renderPdfHistory();
+            renderSection7Table();
+            renderSection8Table();
+        }
+
+        function generateDocNo() {
+            var now = new Date();
+            var year = now.getFullYear();
+            var month = String(now.getMonth() + 1).padStart(2, '0');
+            var day = String(now.getDate()).padStart(2, '0');
+            var hours = String(now.getHours()).padStart(2, '0');
+            var minutes = String(now.getMinutes()).padStart(2, '0');
+            var seconds = String(now.getSeconds()).padStart(2, '0');
+            
+            var docStr = "SDRC-" + year + month + day + "-" + hours + minutes + seconds;
+            document.getElementById('docNo').value = docStr;
+            updateUI();
+        }
+
+        function setCurrentTime() {
+            var now = new Date();
+            var year = now.getFullYear();
+            var month = String(now.getMonth() + 1).padStart(2, '0');
+            var day = String(now.getDate()).padStart(2, '0');
+            var hours = String(now.getHours()).padStart(2, '0');
+            var minutes = String(now.getMinutes()).padStart(2, '0');
+            var seconds = String(now.getSeconds()).padStart(2, '0');
+            
+            var fullTimeStr = year + "年" + month + "月" + day + "日 " + hours + ":" + minutes + ":" + seconds;
+            document.getElementById('issueDate').value = fullTimeStr;
+            updateUI();
+        }
+
+        function syncScoreFromHistory() {
+            var name = document.getElementById('targetName').value || "Megan";
+            var maxScore = parseInt(document.getElementById('maxScore').value) || 100;
+            var baseScore = maxScore;
+
+            for (var i = permanentRecords.length - 1; i >= 0; i--) {
+                if (permanentRecords[i].name === name) {
+                    if (permanentRecords[i].mode === 'deduct') {
+                        baseScore -= (permanentRecords[i].scoreValue || 5);
+                    } else {
+                        baseScore += (permanentRecords[i].scoreValue || 5);
+                    }
+                }
+            }
+
+            if (baseScore < 0) baseScore = 0;
+            document.getElementById('currentScore').value = baseScore;
+            updateUI();
+        }
+
+        function autoFillAllData() {
+            generateDocNo();
+            setCurrentTime();
+            syncScoreFromHistory();
+            alert("⚡ 已自動為你一鍵獲取當前精準時間、生成全新檔案編號，並更新當前誠信積分！");
+        }
+
+        function switchMode(mode) {
+            currentMode = mode;
+            var btnDeduct = document.getElementById('btnModeDeduct');
+            var btnAdd = document.getElementById('btnModeAdd');
+            var deductContainer = document.getElementById('deductSelectContainer');
+            var addContainer = document.getElementById('addSelectContainer');
+            var labelAction = document.getElementById('scoreActionLabel');
+
+            activeReasons = [];
+            var customInput = document.getElementById('customReasonInput');
+            if(customInput) customInput.value = "";
+
+            if (mode === 'deduct') {
+                btnDeduct.className = "mode-btn mode-active-deduct";
+                btnAdd.className = "mode-btn";
+                deductContainer.style.display = "block";
+                addContainer.style.display = "none";
+                labelAction.innerText = "本次扣分數目";
+            } else {
+                btnDeduct.className = "mode-btn";
+                btnAdd.className = "mode-btn mode-active-add";
+                deductContainer.style.display = "none";
+                addContainer.style.display = "block";
+                labelAction.innerText = "本次加分數目";
+            }
+            updateUI();
+        }
+
+        function addDeductPreset() {
+            var sel = document.getElementById('presetDeductSelect');
+            if (sel && sel.value) {
+                activeReasons.push(sel.value);
+                sel.value = "";
+                updateUI();
+            } else { alert("請先於下拉選單中選擇理由！"); }
+        }
+
+        function addAddPreset() {
+            var sel = document.getElementById('presetAddSelect');
+            if (sel && sel.value) {
+                activeReasons.push(sel.value);
+                sel.value = "";
+                updateUI();
+            } else { alert("請先於下拉選單中選擇理由！"); }
+        }
+
+        function onCustomInputChanged() {
+            updateUI();
+        }
+
+        function addCustomReason() {
+            var input = document.getElementById('customReasonInput');
+            var val = input.value.trim();
+            if (val) {
+                activeReasons.push(val);
+                input.value = "";
+                updateUI();
+            } else { alert("手寫輸入框目前為空！"); }
+        }
+
+        function addManualInlineReason() {
+            var input = document.getElementById('customReasonInput');
+            var val = input.value.trim();
+            if (val) {
+                activeReasons.push(val);
+                input.value = "";
+                updateUI();
+            } else {
+                alert("手寫輸入框目前為空！");
+            }
+        }
+
+        function saveCustomReasonToPreset() {
+            var input = document.getElementById('customReasonInput');
+            var val = input.value.trim();
+            if (!val) {
+                alert("請先在手寫輸入框輸入要加入預設的理由！");
+                return;
+            }
+            if (currentMode === 'deduct') {
+                deductPresets.push(val);
+                try { localStorage.setItem('SDRC_DEDUCT_PRESETS_V52', JSON.stringify(deductPresets)); } catch(e) {}
+            } else {
+                addPresets.push(val);
+                try { localStorage.setItem('SDRC_ADD_PRESETS_V52', JSON.stringify(addPresets)); } catch(e) {}
+            }
+            initPresetDropdowns();
+            input.value = "";
+            alert("💾 成功將此理由永久加入預設選單中！");
+        }
+
+        function removeReason(idx) {
+            activeReasons.splice(idx, 1);
+            updateUI();
+        }
+
+        function updateUI() {
+            var ul = document.getElementById('reasonList');
+            var customInput = document.getElementById('customReasonInput');
+            var customVal = customInput ? customInput.value.trim() : "";
+
+            if(ul) {
+                ul.innerHTML = "";
+                if (activeReasons.length === 0 && customVal === "") {
+                    ul.innerHTML = "<li style='color:#999;'>暫無事由，請從上方選擇或手寫新增。</li>";
+                } else {
+                    for (var i = 0; i < activeReasons.length; i++) {
+                        ul.innerHTML += "<li><span><b>" + (i + 1) + ".</b> " + activeReasons[i] + "</span> <button type='button' class='btn-sm btn-red' onclick='removeReason(" + i + ")'>刪除</button></li>";
+                    }
+                    if (customVal !== "") {
+                        var nextIdx = activeReasons.length + 1;
+                        ul.innerHTML += "<li style='background:#fefce8; border-color:#fde047;'><span><b>" + nextIdx + ".</b> " + customVal + "</span> <div style='display:flex; align-items:center; gap:4px;'><button type='button' class='btn-sm btn-emerald' onclick='addManualInlineReason()'>➕ 加入</button><span style='color:#ca8a04;font-size:10px;'>[手寫未加入]</span></div></li>";
+                    }
+                }
+            }
+
+            var name = document.getElementById('targetName') ? document.getElementById('targetName').value || 'Megan' : 'Megan';
+            var handle = document.getElementById('targetHandle') ? document.getElementById('targetHandle').value || 'meg._.an' : 'meg._.an';
+            var maxScore = document.getElementById('maxScore') ? parseInt(document.getElementById('maxScore').value) || 100 : 100;
+            var currentScore = document.getElementById('currentScore') ? parseInt(document.getElementById('currentScore').value) || 0 : 85;
+            var valScore = document.getElementById('scoreValue') ? parseInt(document.getElementById('scoreValue').value) || 0 : 5;
+            var remaining = (currentMode === 'deduct') ? (currentScore - valScore) : (currentScore + valScore);
+            var date = document.getElementById('issueDate') ? document.getElementById('issueDate').value || '2026年8月25日 00:09:08' : '2026年8月25日 00:09:08';
+            var docNo = document.getElementById('docNo') ? document.getElementById('docNo').value || 'SDRC-20260825-000908' : 'SDRC-20260825-000908';
+
+            var allReasonsForExport = [...activeReasons];
+            var reasonsText = "";
+            for (var j = 0; j < allReasonsForExport.length; j++) {
+                reasonsText += (j + 1) + ". " + allReasonsForExport[j] + "\n\n";
+            }
+
+            var emailText = "";
+            if (currentMode === 'deduct') {
+                emailText = "發信單位：\n\n";
+                emailText += "--主辦單位：\n社交紀律審查委員會 (Social Discipline Review Committee)\n\n";
+                emailText += "--聯席監察單位：\n\n";
+                emailText += "-日常通話與社交行為監督小組 (Call & Social Conduct Oversight Group)\n";
+                emailText += "-反睡眠打擾及誠信監察組 (Anti-Sleep Disturbance & Integrity Taskforce)\n";
+                emailText += "-語音通話權益保障委員會 (Voice Call Rights Protection Association)\n\n";
+                emailText += "副本將會抄送： [聯合監察小組全體成員 / 相關受影響友人電郵]\n\n\n";
+                emailText += name + " 閣下：\n\n";
+                emailText += "本「社交紀律審查委員會」會同各聯席監察單位，現就閣下近期於社交及語音通話期間，多次且重複出現嚴重惡劣行為，發出極嚴重警告及懲戒通報。\n\n";
+                emailText += "一、 惡劣違規事實及嚴重性\n";
+                emailText += "經本小組多番記錄、錄音核實及多方投訴，惟通話建立後隨即出現以下極不負責任之行為：\n\n";
+                emailText += (reasonsText || "1. 暫無違規事由。\n\n");
+                emailText += "鑑於上述行為發生頻次極高、影響極為惡劣，委員會一致認定閣下之行為已嚴重破壞社交信任，並構成對社交資源之嚴重虛報與誠信欺詐（Fraud & Deceit）。\n\n\n";
+                emailText += "二、 誠信積分重扣決定\n";
+                emailText += "根據《社交誠信及通話行為管理細則》，閣下之初始社交誠信總分為 " + maxScore + " 分（滿分）。鑑於違規情節極其嚴重，處分決定如下：\n\n";
+                emailText += "1. 即時實時扣分：\n即時重扣 " + valScore + " 分（目前剩餘分數：" + remaining + " / " + maxScore + " 分）。\n\n";
+                emailText += "2. 追加扣分預告：\n若於 7 天觀察期內 再次接獲相關投訴，將即時再追加扣除 " + valScore + " 分。\n\n\n";
+                emailText += "三、 執行極嚴重懲戒罰則\n";
+                emailText += "因閣下之誠信分數已落入嚴重警告區間，經委員會一致決議，即日起執行以下嚴厲處分：\n\n";
+                emailText += "1. 嚴禁「多次且重複出現嚴重惡劣行為」行為。\n2. 正式公開通報批評及列入誠信黑名單。\n3. 強制公開道歉。\n4. 終極處分預告（社交封鎖機制）。\n\n\n";
+                emailText += "四、 重要提示與申訴渠道\n\n";
+                emailText += "【重要提示】本檔案為社交誠信正式紀錄，請當事人嚴肅正視並立即改善相關行為。\n";
+                emailText += "如閣下對上述處分有異議，請於 2 日內提出正式書面申訴。\n\n";
+                emailText += "特此通報\n\n\n";
+                emailText += "--聯合簽署單位：\n";
+                emailText += "-社交紀律審查委員會 (Social Discipline Review Committee)\n";
+                emailText += "-日常通話與社交行為監督小組\n-反睡眠打擾及誠信監察組\n-語音通話權益保障委員會\n\n";
+                emailText += "[發信日期：" + date + "]";
+            } else {
+                emailText = "發信單位：\n\n";
+                emailText += "--主辦單位：\n社交紀律審查委員會 (Social Discipline Review Committee)\n\n";
+                emailText += "--聯席監察單位：\n\n";
+                emailText += "-日常通話與社交行為監督小組 (Call & Social Conduct Oversight Group)\n";
+                emailText += "-反睡眠打擾及誠信監察組 (Anti-Sleep Disturbance & Integrity Taskforce)\n";
+                emailText += "-語音通話權益保障委員會 (Voice Call Rights Protection Association)\n\n";
+                emailText += "副本將會抄送 ： [聯合監察小組全體成員 / 相關友人電郵]\n\n\n";
+                emailText += name + " 閣下：\n\n";
+                emailText += "本「社交紀律審查委員會」會同上述聯席監察單位，現就閣下近期於社交及語音通話期間，展現良好社交誠信與積極維護秩序之行為，向閣下發出正式嘉許通知。\n\n\n";
+                emailText += "一、 事實及嘉許事由\n\n";
+                emailText += "經本聯合小組核實，閣下近期表現優異，符合以下獎勵條件：\n\n";
+                emailText += (reasonsText || "1. 暫無嘉許事由。\n\n");
+                emailText += "\n二、 誠信積分加分決定\n\n";
+                emailText += "經「社交紀律審查委員會」開會討論，現正式對閣下作出以下獎勵：\n\n";
+                emailText += "1. 正式獎勵加分：\n即時獎勵加 " + valScore + " 分（最新誠信分數：" + remaining + " / " + maxScore + " 分）。\n\n";
+                emailText += "2. 納入誠信嘉許檔案：\n本次表揚記錄將正式納入閣下之「社交誠信嘉許檔案」中，特此通報表揚。\n\n\n";
+                emailText += "【重要提示】請繼續保持良好社交禮儀與誠信表現，共同維護優良社群氛圍。\n\n";
+                emailText += "特此通知\n\n\n";
+                emailText += "--聯合簽署單位：\n\n";
+                emailText += "-社交紀律審查委員會 (Social Discipline Review Committee)\n";
+                emailText += "-日常通話與社交行為監督小組\n-反睡眠打擾及誠信監察組\n-語音通話權益保障委員會\n\n\n";
+                emailText += "[發信日期：" + date + "]";
+            }
+
+            if(document.getElementById('emailOutput')) {
+                document.getElementById('emailOutput').value = emailText;
+            }
+            
+            drawCanvasPDF(docNo, name, handle, maxScore, remaining, valScore, date, allReasonsForExport, currentMode);
+        }
+
+        // PDF 繪製引擎（現時處罰記錄：分數只在第一項理由顯示一次）
+        function drawCanvasPDF(docNo, name, handle, maxScore, remaining, valScore, date, reasonsArr, mode) {
+            var canvas = document.getElementById('pdfCanvas');
+            if (!canvas) return;
+            var ctx = canvas.getContext('2d');
+            
+            var curAction = (mode === 'deduct') ? "扣分(-" + valScore + ")" : "加分(+" + valScore + ")";
+            var validReasons = (reasonsArr && reasonsArr.length > 0) ? reasonsArr : ["暫無事由記錄"];
+            
+            var formattedRows = [];
+            for (var k = 0; k < validReasons.length; k++) {
+                var prefix = (k + 1) + ". ";
+                var reasonLines = wrapTextByLimit(validReasons[k], 30);
+                
+                for (var rl = 0; rl < reasonLines.length; rl++) {
+                    var linePrefix = (rl === 0) ? prefix : "    ";
+                    var showAction = (k === 0 && rl === 0) ? curAction : "";
+                    var showUnit = (k === 0 && rl === 0) ? "聯席監察小組" : "";
+
+                    formattedRows.push({
+                        date: (rl === 0 && k === 0) ? date : "",
+                        text: linePrefix + reasonLines[rl],
+                        action: showAction,
+                        unit: showUnit
+                    });
+                }
+            }
+
+            var marginLeft = 285;
+            var marginRight = 285;
+            var tableWidth = 2400 - marginLeft - marginRight;
+
+            var rowHeight = 70;
+            var headerSpace = 750;
+            var footerSpace = 900;
+            var dynamicHeight = Math.max(3400, headerSpace + (formattedRows.length * rowHeight) + footerSpace);
+            
+            canvas.width = 2400;
+            canvas.height = dynamicHeight;
+
+            ctx.fillStyle = "#ffffff";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.save();
+            ctx.translate(canvas.width / 2, canvas.height / 2);
+            ctx.rotate(-Math.PI / 4);
+            ctx.font = "bold 160px sans-serif";
+            ctx.fillStyle = "rgba(226, 232, 240, 0.4)";
+            ctx.textAlign = "center";
+            ctx.fillText("SDRC OFFICIAL", 0, 0);
+            ctx.restore();
+
+            ctx.fillStyle = "#000000";
+            ctx.font = "bold 72px sans-serif";
+            ctx.textAlign = "center";
+            var title = (mode === 'deduct') ? "社交紀律審查委員會" : "社交紀律審查委員會 (嘉許)";
+            ctx.fillText(title, canvas.width / 2, 160);
+
+            ctx.font = "46px sans-serif";
+            ctx.fillStyle = "#333333";
+            var subtitle = (mode === 'deduct') ? "社交誠信永久檔案表 (Social Integrity Permanent File)" : "社交誠信嘉許檔案表 (Social Integrity Merit File)";
+            ctx.fillText(subtitle, canvas.width / 2, 230);
+
+            ctx.textAlign = "left";
+            ctx.font = "bold 40px sans-serif";
+            ctx.fillStyle = "#000000";
+            
+            ctx.fillText("檔案編號:", marginLeft, 340);
+            ctx.font = "40px sans-serif";
+            ctx.fillText(docNo, marginLeft, 395);
+
+            ctx.font = "bold 40px sans-serif";
+            ctx.fillText("帳號:", marginLeft, 465);
+            ctx.font = "40px sans-serif";
+            ctx.fillText(handle, marginLeft, 520);
+
+            ctx.font = "bold 40px sans-serif";
+            ctx.fillText("持有人:", 1450, 340);
+            ctx.font = "40px sans-serif";
+            ctx.fillText(name, 1450, 395);
+
+            ctx.font = "bold 40px sans-serif";
+            ctx.fillText("當前誠信積分:", 1450, 465);
+            ctx.font = "40px sans-serif";
+            ctx.fillText(remaining + "/" + maxScore, 1450, 520);
+
+            var startY1 = 600;
+            ctx.font = "bold 42px sans-serif";
+            var section1Title = (mode === 'deduct') ? "第一部分:現時處罰記錄" : "第一部分:現時嘉許記錄";
+            ctx.fillText(section1Title, marginLeft, startY1);
+
+            ctx.save();
+            ctx.strokeStyle = (mode === 'deduct') ? "#dc2626" : "#16a34a";
+            ctx.lineWidth = 5;
+            ctx.strokeRect(1700, startY1 - 35, 415, 70);
+            ctx.font = "bold 34px sans-serif";
+            ctx.fillStyle = (mode === 'deduct') ? "#dc2626" : "#16a34a";
+            ctx.textAlign = "center";
+            var badgeText = (mode === 'deduct') ? "已認證核准 (VERIFIED)" : "已認證嘉許 (MERIT VERIFIED)";
+            ctx.fillText(badgeText, 1907, startY1 + 10);
+            ctx.restore();
+
+            var table1Top = startY1 + 35;
+            ctx.strokeRect(marginLeft, table1Top, tableWidth, 75);
+            ctx.font = "bold 34px sans-serif";
+            ctx.textAlign = "left";
+            var col2Title = (mode === 'deduct') ? "違規事由" : "嘉許紀錄";
+            var col3Title = (mode === 'deduct') ? "懲戒處分" : "加分項";
+            
+            ctx.fillText("日期時間", marginLeft + 20, table1Top + 48);
+            ctx.fillText(col2Title, marginLeft + 400, table1Top + 48);
+            ctx.fillText(col3Title, marginLeft + 1300, table1Top + 48);
+            ctx.fillText("負責單位", marginLeft + 1600, table1Top + 48);
+
+            var row1Top = table1Top + 75;
+            var totalTableHeight = formattedRows.length * rowHeight;
+            ctx.strokeRect(marginLeft, row1Top, tableWidth, totalTableHeight);
+
+            for (var w = 0; w < formattedRows.length; w++) {
+                var currentY = row1Top + (w * rowHeight);
+                if (w > 0) {
+                    ctx.beginPath();
+                    ctx.moveTo(marginLeft, currentY);
+                    ctx.lineTo(marginLeft + tableWidth, currentY);
+                    ctx.stroke();
+                }
+                ctx.font = "24px sans-serif";
+                if (formattedRows[w].date) ctx.fillText(formattedRows[w].date, marginLeft + 20, currentY + 45);
+                ctx.font = "25px sans-serif";
+                ctx.fillText(formattedRows[w].text, marginLeft + 400, currentY + 45);
+                ctx.fillText(formattedRows[w].action, marginLeft + 1300, currentY + 45);
+                ctx.fillText(formattedRows[w].unit, marginLeft + 1600, currentY + 45);
+            }
+            row1Top += totalTableHeight;
+
+            var startY3 = row1Top + 80;
+            ctx.font = "bold 36px sans-serif";
+            ctx.fillStyle = "#b91c1c";
+            ctx.fillText("【重要提示】", marginLeft, startY3);
+            ctx.font = "28px sans-serif";
+            ctx.fillStyle = "#333333";
+            var tipText = (mode === 'deduct') ? 
+                "本檔案為社交誠信正式紀錄。當事人必須嚴肅正視上述事項，如對處分有異議請於 2 日內提出申訴。" : 
+                "本嘉許檔案為社群誠信優良證明，請繼續保持良好溝通與禮儀。";
+            ctx.fillText(tipText, marginLeft, startY3 + 45);
+
+            var footerY = dynamicHeight - 650;
+            ctx.font = "bold 34px sans-serif";
+            ctx.fillStyle = "#000000";
+
+            ctx.fillText("主辦單位:", marginLeft, footerY);
+            ctx.font = "30px sans-serif";
+            ctx.fillText("社交紀律審查委員會 (Social Discipline Review Committee)", marginLeft, footerY + 50);
+
+            ctx.font = "bold 34px sans-serif";
+            ctx.fillText("聯席監察單位:", marginLeft, footerY + 120);
+            ctx.font = "28px sans-serif";
+            ctx.fillText("・日常通話與社交行為監督小組 (Call & Social Conduct Oversight Group)", marginLeft, footerY + 165);
+            ctx.fillText("・反睡眠打擾及誠信監察組 (Anti-Sleep Disturbance & Integrity Taskforce)", marginLeft, footerY + 205);
+            ctx.fillText("・語音通話權益保障委員會 (Voice Call Rights Protection Association)", marginLeft, footerY + 245);
+
+            ctx.font = "bold 34px sans-serif";
+            ctx.fillText("簽發日期時間: " + date, 1400, footerY + 245);
+        }
+
+        // 第七/八部分歷史 PDF 繪製引擎
+        function drawHistoricalCanvasPDF(docNo, name, handle, maxScore, remaining, valScore, date, historicalList, mode) {
+            var canvas = document.getElementById('pdfCanvas');
+            if (!canvas) return;
+            var ctx = canvas.getContext('2d');
+            
+            var formattedRows = [];
+            
+            for (var m = 0; m < historicalList.length; m++) {
+                var rec = historicalList[m];
+                var rawReason = (rec.reason || "暫無事由").replace(/；/g, " ").replace(/;/g, " ");
+                var splitSubReasons = rawReason.split(/(?:\. |。)/);
+                
+                var violationGroupNumber = m + 1; 
+                var subItemCounter = 1;
+
+                for (var sr = 0; sr < splitSubReasons.length; sr++) {
+                    var singleReasonText = splitSubReasons[sr].trim();
+                    if (!singleReasonText) continue;
+                    
+                    var subIndexStr = "";
+                    if (subItemCounter <= 9) {
+                        subIndexStr = violationGroupNumber + "." + subItemCounter; 
+                    } else if (subItemCounter <= 19) {
+                        subIndexStr = violationGroupNumber + "." + subItemCounter; 
+                    } else {
+                        var groupNum = Math.floor((subItemCounter - 1) / 9);
+                        var remNum = ((subItemCounter - 1) % 9) + 1;
+                        subIndexStr = violationGroupNumber + "." + (groupNum * 10 + remNum); 
+                    }
+
+                    var reasonLines = wrapTextByLimit(singleReasonText + "。", 30);
+                    
+                    for (var rl = 0; rl < reasonLines.length; rl++) {
+                        var linePrefix = (rl === 0) ? (subIndexStr + " ") : "    "; 
+                        var showAction = (rl === 0 && sr === 0) ? ((rec.mode === 'deduct') ? "扣分(-" + (rec.scoreValue || 5) + ")" : "加分(+" + (rec.scoreValue || 5) + ")") : "";
+                        var showUnit = (rl === 0 && sr === 0) ? "聯席監察小組" : "";
+
+                        formattedRows.push({
+                            date: (rl === 0 && sr === 0) ? (rec.date || date) : "",
+                            text: linePrefix + reasonLines[rl],
+                            action: showAction,
+                            unit: showUnit
+                        });
+                    }
+                    
+                    subItemCounter++;
+                }
+            }
+
+            if (formattedRows.length === 0) {
+                formattedRows.push({ date: date, text: "1.1 暫無以往紀錄。", action: "無", unit: "聯席監察小組" });
+            }
+
+            var marginLeft = 285;
+            var marginRight = 285;
+            var tableWidth = 2400 - marginLeft - marginRight;
+
+            var rowHeight = 70;
+            var headerSpace = 750;
+            var footerSpace = 1100; 
+            var dynamicHeight = Math.max(3500, headerSpace + (formattedRows.length * rowHeight) + footerSpace);
+            
+            canvas.width = 2400;
+            canvas.height = dynamicHeight;
+
+            ctx.fillStyle = "#ffffff";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.save();
+            ctx.translate(canvas.width / 2, canvas.height / 2);
+            ctx.rotate(-Math.PI / 4);
+            ctx.font = "bold 160px sans-serif";
+            ctx.fillStyle = "rgba(226, 232, 240, 0.4)";
+            ctx.textAlign = "center";
+            ctx.fillText("SDRC OFFICIAL", 0, 0);
+            ctx.restore();
+
+            ctx.fillStyle = "#000000";
+            ctx.font = "bold 72px sans-serif";
+            ctx.textAlign = "center";
+            var title = (mode === 'deduct') ? "社交紀律審查委員會" : "社交紀律審查委員會 (嘉許)";
+            ctx.fillText(title, canvas.width / 2, 160);
+
+            ctx.font = "46px sans-serif";
+            ctx.fillStyle = "#333333";
+            var subtitle = (mode === 'deduct') ? "社交誠信以往檔案表 (Social Integrity Historical File)" : "社交誠信以往嘉許表 (Social Integrity Historical Merit File)";
+            ctx.fillText(subtitle, canvas.width / 2, 230);
+
+            ctx.textAlign = "left";
+            ctx.font = "bold 40px sans-serif";
+            ctx.fillStyle = "#000000";
+            
+            ctx.fillText("檔案編號:", marginLeft, 340);
+            ctx.font = "40px sans-serif";
+            ctx.fillText(docNo, marginLeft, 395);
+
+            ctx.font = "bold 40px sans-serif";
+            ctx.fillText("帳號:", marginLeft, 465);
+            ctx.font = "40px sans-serif";
+            ctx.fillText(handle, marginLeft, 520);
+
+            ctx.font = "bold 40px sans-serif";
+            ctx.fillText("持有人:", 1450, 340);
+            ctx.font = "40px sans-serif";
+            ctx.fillText(name, 1450, 395);
+
+            ctx.font = "bold 40px sans-serif";
+            ctx.fillText("當前誠信積分:", 1450, 465);
+            ctx.font = "40px sans-serif";
+            ctx.fillText(remaining + "/" + maxScore, 1450, 520);
+
+            var startY1 = 600;
+            ctx.font = "bold 42px sans-serif";
+            var sectionTitleText = (mode === 'deduct') ? "以往違規紀錄 (Historical Records)" : "以往嘉許紀錄 (Historical Merit Records)";
+            ctx.fillText(sectionTitleText, marginLeft, startY1);
+
+            ctx.save();
+            ctx.strokeStyle = (mode === 'deduct') ? "#4f46e5" : "#059669";
+            ctx.lineWidth = 5;
+            ctx.strokeRect(1700, startY1 - 35, 415, 70);
+            ctx.font = "bold 34px sans-serif";
+            ctx.fillStyle = (mode === 'deduct') ? "#4f46e5" : "#059669";
+            ctx.textAlign = "center";
+            ctx.fillText("歷史存檔 (ARCHIVED)", 1907, startY1 + 10);
+            ctx.restore();
+
+            var table1Top = startY1 + 35;
+            ctx.strokeRect(marginLeft, table1Top, tableWidth, 75);
+            ctx.font = "bold 34px sans-serif";
+            ctx.textAlign = "left";
+            
+            var col2Name = (mode === 'deduct') ? "違規紀錄" : "嘉許紀錄";
+            ctx.fillText("日期時間", marginLeft + 20, table1Top + 48);
+            ctx.fillText(col2Name, marginLeft + 400, table1Top + 48);
+            ctx.fillText("處分結果", marginLeft + 1300, table1Top + 48);
+            ctx.fillText("審核單位", marginLeft + 1600, table1Top + 48);
+
+            var row1Top = table1Top + 75;
+            var totalTableHeight = formattedRows.length * rowHeight;
+            ctx.strokeRect(marginLeft, row1Top, tableWidth, totalTableHeight);
+
+            for (var w = 0; w < formattedRows.length; w++) {
+                var currentY = row1Top + (w * rowHeight);
+                if (w > 0) {
+                    ctx.beginPath();
+                    ctx.moveTo(marginLeft, currentY);
+                    ctx.lineTo(marginLeft + tableWidth, currentY);
+                    ctx.stroke();
+                }
+                ctx.font = "24px sans-serif";
+                if (formattedRows[w].date) ctx.fillText(formattedRows[w].date, marginLeft + 20, currentY + 45);
+                ctx.font = "25px sans-serif";
+                ctx.fillText(formattedRows[w].text, marginLeft + 400, currentY + 45);
+                ctx.fillText(formattedRows[w].action, marginLeft + 1300, currentY + 45);
+                ctx.fillText(formattedRows[w].unit, marginLeft + 1600, currentY + 45);
+            }
+            row1Top += totalTableHeight;
+
+            var startY3 = row1Top + 80;
+            ctx.font = "bold 36px sans-serif";
+            ctx.fillStyle = "#b91c1c";
+            ctx.fillText("【重要提示】", marginLeft, startY3);
+            ctx.font = "28px sans-serif";
+            ctx.fillStyle = "#333333";
+            ctx.fillText("本檔案為以往紀錄歷史存檔，僅供內部覆核與參考使用。", marginLeft, startY3 + 45);
+
+            var footerY = dynamicHeight - 550;
+            ctx.font = "bold 34px sans-serif";
+            ctx.fillStyle = "#000000";
+
+            ctx.fillText("主辦單位:", marginLeft, footerY);
+            ctx.font = "30px sans-serif";
+            ctx.fillText("社交紀律審查委員會 (Social Discipline Review Committee)", marginLeft, footerY + 50);
+
+            ctx.font = "bold 34px sans-serif";
+            ctx.fillText("聯席監察單位:", marginLeft, footerY + 120);
+            ctx.font = "28px sans-serif";
+            ctx.fillText("・日常通話與社交行為監督小組 (Call & Social Conduct Oversight Group)", marginLeft, footerY + 165);
+            ctx.fillText("・反睡眠打擾及誠信監察組 (Anti-Sleep Disturbance & Integrity Taskforce)", marginLeft, footerY + 205);
+            ctx.fillText("・語音通話權益保障委員會 (Voice Call Rights Protection Association)", marginLeft, footerY + 245);
+
+            ctx.font = "bold 34px sans-serif";
+            ctx.fillText("簽發日期時間: " + date, 1400, footerY + 245);
+        }
+
+        // 智慧分頁匯出 PDF 引擎
+        function exportCanvasToMultiPagePDF(canvas, fileName) {
+            const { jsPDF } = window.jspdf;
+            var pdf = new jsPDF('p', 'mm', 'a4');
+            
+            var imgData = canvas.toDataURL('image/png', 1.0);
+            var imgWidth = 210; 
+            var pageHeight = 297; 
+            
+            var topMarginMm = 30;    
+            var bottomMarginMm = 30; 
+            var printablePageHeightMm = pageHeight - topMarginMm - bottomMarginMm; 
+            
+            var imgHeight = (canvas.height * imgWidth) / canvas.width;
+            
+            pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+            
+            var heightLeft = imgHeight - pageHeight; 
+            var sourceYOffset = pageHeight; 
+
+            while (heightLeft > 0) {
+                pdf.addPage();
+                pdf.addImage(imgData, 'PNG', 0, topMarginMm - sourceYOffset, imgWidth, imgHeight);
+                heightLeft -= printablePageHeightMm;
+                sourceYOffset += printablePageHeightMm;
+            }
+
+            pdf.save(fileName);
+        }
+
+        function confirmAndSaveRecord() {
+            var docNo = document.getElementById('docNo').value.trim();
+            var issueDate = document.getElementById('issueDate').value.trim();
+
+            if (!docNo || !issueDate) {
+                if (confirm("⚠️ 尚未填寫檔案編號或日期，是否自動一鍵補齊？")) {
+                    autoFillAllData();
+                    docNo = document.getElementById('docNo').value;
+                    issueDate = document.getElementById('issueDate').value;
+                } else {
+                    return;
+                }
+            }
+
+            var name = document.getElementById('targetName').value;
+            var handle = document.getElementById('targetHandle').value;
+            var maxScore = parseInt(document.getElementById('maxScore').value) || 100;
+            var currentScore = parseInt(document.getElementById('currentScore').value) || 85;
+            var valScore = parseInt(document.getElementById('scoreValue').value) || 5;
+            var remaining = (currentMode === 'deduct') ? (currentScore - valScore) : (currentScore + valScore);
+            
+            var customInput = document.getElementById('customReasonInput');
+            if (customInput) {
+                customInput.value = "";
+            }
+
+            var curReasons = activeReasons.length > 0 ? [...activeReasons] : ["暫無具體事由"];
+            var curAction = (currentMode === 'deduct') ? "扣分(-" + valScore + ")" : "加分(+" + valScore + ")";
+
+            drawCanvasPDF(docNo, name, handle, maxScore, remaining, valScore, issueDate, curReasons, currentMode);
+
+            var canvas = document.getElementById('pdfCanvas');
+            var fileName = name + (currentMode === 'deduct' ? "_Permanent_File.pdf" : "_Merit_File.pdf");
+            exportCanvasToMultiPagePDF(canvas, fileName);
+
+            permanentRecords.unshift({
+                name: name,
+                docNo: docNo,
+                mode: currentMode,
+                scoreValue: valScore,
+                date: issueDate,
+                reason: curReasons.join(" "),
+                action: curAction + "、公開通報",
+                unit: "聯席監察小組"
+            });
+
+            pdfHistory.unshift({
+                time: issueDate,
+                docNo: docNo,
+                name: name,
+                handle: handle,
+                maxScore: maxScore,
+                remaining: remaining,
+                scoreValue: valScore,
+                mode: currentMode,
+                reasons: curReasons,
+                summary: (currentMode === 'deduct' ? "【懲戒通告】" : "【表揚通告】") + (curReasons[0] || "通告")
+            });
+
+            if (pdfHistory.length > 1000) pdfHistory.pop(); // 支援高達 1000 條歷史緩存
+
+            activeReasons = [];
+            saveDataToLocalStorage();
+            updateAllTables();
+            updateUI();
+
+            alert('✅ 資料已成功存檔，並已自動下載正式 PDF 通告檔案！');
+        }
+
+        function downloadImageDoc() {
+            var customInput = document.getElementById('customReasonInput');
+            if (customInput) customInput.value = "";
+
+            var canvas = document.getElementById('pdfCanvas');
+            var name = document.getElementById('targetName').value;
+            var fileName = name + (currentMode === 'deduct' ? "_Permanent_File.pdf" : "_Merit_File.pdf");
+
+            exportCanvasToMultiPagePDF(canvas, fileName);
+            alert("📥 正式 PDF 通告檔已成功下載！");
+        }
+
+        function downloadHistoricalPDF(idx) {
+            var item = pdfHistory[idx];
+            if (!item) return;
+
+            if (item.isManual && item.fileData) {
+                var dlAnchor = document.createElement('a');
+                dlAnchor.setAttribute("href", item.fileData);
+                dlAnchor.setAttribute("download", item.summary || "Uploaded_File.pdf");
+                document.body.appendChild(dlAnchor);
+                dlAnchor.click();
+                dlAnchor.remove();
+                return;
+            } else if (item.isManual) {
+                alert("此手動上載檔案無快取資料，無法重新下載。");
+                return;
+            }
+
+            drawCanvasPDF(
+                item.docNo || "SDRC-DOC", 
+                item.name || "Megan", 
+                item.handle || "meg._.an", 
+                item.maxScore || 100, 
+                item.remaining || 85, 
+                item.scoreValue || 5, 
+                item.time || new Date().toLocaleString(), 
+                item.reasons || ["暫無事由"], 
+                item.mode || 'deduct'
+            );
+
+            var canvas = document.getElementById('pdfCanvas');
+            exportCanvasToMultiPagePDF(canvas, (item.name || "File") + "_" + (item.docNo || "DOC") + ".pdf");
+            updateUI();
+        }
+
+        function downloadSection7PDF(tableIdx) {
+            var currentTarget = document.getElementById('targetName').value.trim();
+            var deductRecords = [];
+            for (var i = 0; i < permanentRecords.length; i++) {
+                if (permanentRecords[i].name === currentTarget && permanentRecords[i].mode === 'deduct') {
+                    deductRecords.push(permanentRecords[i]);
+                }
+            }
+
+            var realTargetItem = deductRecords[tableIdx];
+            if (!realTargetItem) return;
+
+            var isolatedList = [];
+            for (var d = deductRecords.length - 1; d >= tableIdx; d--) {
+                isolatedList.push(deductRecords[d]);
+            }
+
+            drawHistoricalCanvasPDF(
+                realTargetItem.docNo || "SDRC-DOC", 
+                realTargetItem.name || "Megan", 
+                document.getElementById('targetHandle').value || "meg._.an", 
+                100, 
+                85, 
+                realTargetItem.scoreValue || 5, 
+                realTargetItem.date || new Date().toLocaleString(), 
+                isolatedList, 
+                'deduct'
+            );
+
+            var canvas = document.getElementById('pdfCanvas');
+            exportCanvasToMultiPagePDF(canvas, realTargetItem.name + "_Historical_Violation_" + realTargetItem.docNo + ".pdf");
+            updateUI();
+        }
+
+        function downloadSection8PDF(tableIdx) {
+            var currentTarget = document.getElementById('targetName').value.trim();
+            var addRecords = [];
+            for (var i = 0; i < permanentRecords.length; i++) {
+                if (permanentRecords[i].name === currentTarget && permanentRecords[i].mode === 'add') {
+                    addRecords.push(permanentRecords[i]);
+                }
+            }
+
+            var realTargetItem = addRecords[tableIdx];
+            if (!realTargetItem) return;
+
+            var isolatedList = [];
+            for (var a = addRecords.length - 1; a >= tableIdx; a--) {
+                isolatedList.push(addRecords[a]);
+            }
+
+            drawHistoricalCanvasPDF(
+                realTargetItem.docNo || "SDRC-DOC", 
+                realTargetItem.name || "Megan", 
+                document.getElementById('targetHandle').value || "meg._.an", 
+                100, 
+                85, 
+                realTargetItem.scoreValue || 5, 
+                realTargetItem.date || new Date().toLocaleString(), 
+                isolatedList, 
+                'add'
+            );
+
+            var canvas = document.getElementById('pdfCanvas');
+            exportCanvasToMultiPagePDF(canvas, realTargetItem.name + "_Historical_Merit_" + realTargetItem.docNo + ".pdf");
+            updateUI();
+        }
+
+        function saveDataToLocalStorage() {
+            try { 
+                localStorage.setItem('SDRC_PERM_RECS_V52', JSON.stringify(permanentRecords)); 
+                localStorage.setItem('SDRC_PDF_V52', JSON.stringify(pdfHistory));
+                localStorage.setItem('SDRC_EM_V52', JSON.stringify(emailHistory));
+                localStorage.setItem('SDRC_PERSON_LIST_V52', JSON.stringify(personList));
+                localStorage.setItem('SDRC_DEDUCT_PRESETS_V52', JSON.stringify(deductPresets));
+                localStorage.setItem('SDRC_ADD_PRESETS_V52', JSON.stringify(addPresets));
+            } catch(e) {}
+        }
+
+        // 第四部分：歷史表
+        function renderPermRecordsTable() {
+            var tbody = document.getElementById('permRecordsTableBody');
+            if (!tbody) return;
+            tbody.innerHTML = "";
+            var currentTarget = document.getElementById('targetName').value.trim();
+            
+            var filtered = [];
+            for (var i = 0; i < permanentRecords.length; i++) {
+                if (permanentRecords[i].name === currentTarget) {
+                    filtered.push({ index: i, item: permanentRecords[i] });
+                }
+            }
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = "<tr><td colspan='7' style='text-align:center; color:#999;'>當事人 [" + currentTarget + "] 暫無存檔紀錄</td></tr>";
+                return;
+            }
+
+            for (var f = 0; f < filtered.length; f++) {
+                var idx = filtered[f].index;
+                var item = filtered[f].item;
+                var typeTag = item.mode === 'deduct' ? "<span style='color:red;font-weight:bold;'>扣分處分</span>" : "<span style='color:green;font-weight:bold;'>加分嘉許</span>";
+                var scoreTag = item.mode === 'deduct' ? "-" + item.scoreValue : "+" + item.scoreValue;
+                tbody.innerHTML += "<tr><td>" + item.date + "</td><td>" + item.docNo + "</td><td>" + item.name + "</td><td>" + typeTag + "</td><td>" + scoreTag + "</td><td>" + item.reason + "</td><td><button type='button' class='btn-sm btn-red' onclick='deleteSinglePermRecord(" + idx + ")'>刪除</button></td></tr>";
+            }
+        }
+
+        function deleteSinglePermRecord(idx) {
+            permanentRecords.splice(idx, 1);
+            saveDataToLocalStorage();
+            updateAllTables();
+            updateUI();
+        }
+
+        function clearPermanentRecords() {
+            var currentTarget = document.getElementById('targetName').value.trim();
+            if (confirm("確定要清空當事人 [" + currentTarget + "] 在第四部分的存檔紀錄嗎？")) {
+                var newRecs = [];
+                for (var i = 0; i < permanentRecords.length; i++) {
+                    if (permanentRecords[i].name !== currentTarget) {
+                        newRecs.push(permanentRecords[i]);
+                    }
+                }
+                permanentRecords = newRecs;
+                saveDataToLocalStorage();
+                renderPermRecordsTable();
+                updateUI();
+            }
+        }
+
+        function clearSections4To8() {
+            var currentTarget = document.getElementById('targetName').value.trim();
+            if (confirm("⚠️ 確定要一鍵清空當事人 [" + currentTarget + "] 的第四至第八部分所有資料嗎？")) {
+                var newRecs = [];
+                for (var i = 0; i < permanentRecords.length; i++) {
+                    if (permanentRecords[i].name !== currentTarget) {
+                        newRecs.push(permanentRecords[i]);
+                    }
+                }
+                permanentRecords = newRecs;
+
+                var newEm = [];
+                for (var j = 0; j < emailHistory.length; j++) {
+                    if (emailHistory[j].name !== currentTarget) {
+                        newEm.push(emailHistory[j]);
+                    }
+                }
+                emailHistory = newEm;
+
+                var newPdf = [];
+                for (var k = 0; k < pdfHistory.length; k++) {
+                    if (pdfHistory[k].name !== currentTarget) {
+                        newPdf.push(pdfHistory[k]);
+                    }
+                }
+                pdfHistory = newPdf;
+
+                saveDataToLocalStorage();
+                updateAllTables();
+                updateUI();
+                alert("🧹 已成功清空當事人 [" + currentTarget + "] 的第四至第八部分所有資料！");
+            }
+        }
+
+        // 第七部分：以往違規紀錄表格
+        function renderSection7Table() {
+            var tbody = document.getElementById('section7TableBody');
+            if (!tbody) return;
+            tbody.innerHTML = "";
+            var currentTarget = document.getElementById('targetName').value.trim();
+
+            var filtered = [];
+            for (var i = 0; i < permanentRecords.length; i++) {
+                if (permanentRecords[i].name === currentTarget && permanentRecords[i].mode === 'deduct') {
+                    filtered.push({ index: i, item: permanentRecords[i] });
+                }
+            }
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = "<tr><td colspan='6' style='text-align:center; color:#999;'>當事人 [" + currentTarget + "] 暫無以往違規紀錄</td></tr>";
+                return;
+            }
+
+            for (var f = 0; f < filtered.length; f++) {
+                var idx = filtered[f].index;
+                var item = filtered[f].item;
+                tbody.innerHTML += "<tr><td>" + item.date + "</td><td>" + item.docNo + "</td><td><span style='color:red;font-weight:bold;'>扣分處分</span></td><td>-" + item.scoreValue + "</td><td>" + item.reason + "</td><td><button type='button' class='btn-sm btn-indigo' onclick='downloadSection7PDF(" + f + ")'>📥 下載 PDF</button> <button type='button' class='btn-sm btn-red' onclick='deleteSinglePermRecord(" + idx + ")'>刪除</button></td></tr>";
+            }
+        }
+
+        // 第八部分：以往嘉許紀錄表格
+        function renderSection8Table() {
+            var tbody = document.getElementById('section8TableBody');
+            if (!tbody) return;
+            tbody.innerHTML = "";
+            var currentTarget = document.getElementById('targetName').value.trim();
+
+            var filtered = [];
+            for (var i = 0; i < permanentRecords.length; i++) {
+                if (permanentRecords[i].name === currentTarget && permanentRecords[i].mode === 'add') {
+                    filtered.push({ index: i, item: permanentRecords[i] });
+                }
+            }
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = "<tr><td colspan='6' style='text-align:center; color:#999;'>當事人 [" + currentTarget + "] 暫無以往嘉許紀錄</td></tr>";
+                return;
+            }
+
+            for (var f = 0; f < filtered.length; f++) {
+                var idx = filtered[f].index;
+                var item = filtered[f].item;
+                tbody.innerHTML += "<tr><td>" + item.date + "</td><td>" + item.docNo + "</td><td><span style='color:green;font-weight:bold;'>加分嘉許</span></td><td>+" + item.scoreValue + "</td><td>" + item.reason + "</td><td><button type='button' class='btn-sm btn-indigo' onclick='downloadSection8PDF(" + f + ")'>📥 下載 PDF</button> <button type='button' class='btn-sm btn-red' onclick='deleteSinglePermRecord(" + idx + ")'>刪除</button></td></tr>";
+            }
+        }
+
+        function clearPermRecordsTable(modeType) {
+            var currentTarget = document.getElementById('targetName').value.trim();
+            var titleStr = modeType === 'deduct' ? "以往違規紀錄" : "以往嘉許紀錄";
+            if (confirm("確定要清空當事人 [" + currentTarget + "] 的所有" + titleStr + "嗎？")) {
+                var newRecs = [];
+                for (var i = 0; i < permanentRecords.length; i++) {
+                    if (permanentRecords[i].name !== currentTarget || permanentRecords[i].mode !== modeType) {
+                        newRecs.push(permanentRecords[i]);
+                    }
+                }
+                permanentRecords = newRecs;
+                saveDataToLocalStorage();
+                updateAllTables();
+                updateUI();
+            }
+        }
+
+        function copyAndSaveEmail() {
+            var txt = document.getElementById('emailOutput');
+            txt.select();
+            try { document.execCommand('copy'); } catch(e) {}
+
+            var name = document.getElementById('targetName').value;
+            var valScore = parseInt(document.getElementById('scoreValue').value) || 5;
+            var now = new Date().toLocaleString('zh-HK');
+            var typeText = (currentMode === 'deduct') ? "扣分 (-" + valScore + ")" : "加分 (+" + valScore + ")";
+
+            emailHistory.unshift({
+                time: now,
+                name: name,
+                scoreInfo: typeText,
+                text: txt.value
+            });
+
+            if (emailHistory.length > 1000) emailHistory.pop();
+            saveDataToLocalStorage();
+
+            renderEmailHistory();
+            alert('已成功複製電郵內文並保存！');
+        }
+
+        function renderEmailHistory() {
+            var tbody = document.getElementById('emailHistoryTableBody');
+            if(!tbody) return;
+            tbody.innerHTML = "";
+            var currentTarget = document.getElementById('targetName').value.trim();
+
+            var filtered = [];
+            for (var i = 0; i < emailHistory.length; i++) {
+                if (emailHistory[i].name === currentTarget) {
+                    filtered.push({ index: i, item: emailHistory[i] });
+                }
+            }
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = "<tr><td colspan='5' style='text-align:center; color:#999;'>當事人 [" + currentTarget + "] 暫無電郵紀錄</td></tr>";
+                return;
+            }
+            for (var f = 0; f < filtered.length; f++) {
+                var idx = filtered[f].index;
+                var item = filtered[f].item;
+                var colorStyle = item.scoreInfo.indexOf('加分') !== -1 ? "color:green;font-weight:bold;" : "color:red;font-weight:bold;";
+                tbody.innerHTML += "<tr><td>" + item.time + "</td><td>" + item.name + "</td><td style='" + colorStyle + "'>" + item.scoreInfo + "</td><td>" + item.text.substring(0, 15) + "...</td><td><button type='button' class='btn-sm btn-indigo' onclick='recopyEmail(" + idx + ")'>複製</button> <button type='button' class='btn-sm btn-red' onclick='deleteSingleEmail(" + idx + ")'>刪除</button></td></tr>";
+            }
+        }
+
+        function recopyEmail(idx) {
+            var t = document.createElement("textarea");
+            t.value = emailHistory[idx].text;
+            document.body.appendChild(t);
+            t.select();
+            try { document.execCommand("copy"); } catch(e) {}
+            document.body.removeChild(t);
+            alert("已再次複製該電郵！");
+        }
+
+        function deleteSingleEmail(idx) {
+            emailHistory.splice(idx, 1);
+            saveDataToLocalStorage();
+            renderEmailHistory();
+        }
+
+        function clearEmailHistory() {
+            var currentTarget = document.getElementById('targetName').value.trim();
+            if (confirm("確定要清空當事人 [" + currentTarget + "] 的所有電郵歷史嗎？")) {
+                var newEm = [];
+                for (var i = 0; i < emailHistory.length; i++) {
+                    if (emailHistory[i].name !== currentTarget) {
+                        newEm.push(emailHistory[i]);
+                    }
+                }
+                emailHistory = newEm;
+                saveDataToLocalStorage();
+                renderEmailHistory();
+            }
+        }
+
+        function triggerFileInput() {
+            document.getElementById('pdfFileInput').click();
+        }
+
+        function uploadPDF(e) {
+            var file = e.target.files[0];
+            if (file) {
+                var reader = new FileReader();
+                reader.onload = function(uploadEvent) {
+                    var now = new Date().toLocaleString('zh-HK');
+                    var name = document.getElementById('targetName').value || "未知";
+                    
+                    pdfHistory.unshift({
+                        time: now,
+                        docNo: "手動上載",
+                        name: name,
+                        summary: file.name,
+                        scoreDisplay: "未知",
+                        isManual: true,
+                        fileData: uploadEvent.target.result
+                    });
+
+                    saveDataToLocalStorage();
+                    renderPdfHistory();
+                    alert("檔案紀錄已成功儲存並可隨時重新下載！");
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // 第六部分：即時違規紀錄表格
+        function renderPdfHistory() {
+            var tbody = document.getElementById('pdfHistoryTableBody');
+            if(!tbody) return;
+            tbody.innerHTML = "";
+            var currentTarget = document.getElementById('targetName').value.trim();
+
+            var filtered = [];
+            for (var i = 0; i < pdfHistory.length; i++) {
+                if (pdfHistory[i].name === currentTarget) {
+                    filtered.push({ index: i, item: pdfHistory[i] });
+                }
+            }
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = "<tr><td colspan='6' style='text-align:center; color:#999;'>當事人 [" + currentTarget + "] 暫無即時違規紀錄</td></tr>";
+                return;
+            }
+            for (var f = 0; f < filtered.length; f++) {
+                var idx = filtered[f].index;
+                var item = filtered[f].item;
+                
+                var scoreDisplayHtml = "";
+                if (item.scoreValue !== undefined) {
+                    if (item.mode === 'deduct') {
+                        scoreDisplayHtml = "<span style='color:red; font-weight:bold;'>扣分 (-" + item.scoreValue + ")</span>";
+                    } else {
+                        scoreDisplayHtml = "<span style='color:green; font-weight:bold;'>加分 (+" + item.scoreValue + ")</span>";
+                    }
+                } else {
+                    scoreDisplayHtml = "<span style='color:#64748b;'>手動上載檔案</span>";
+                }
+
+                var actionBtn = "<button type='button' class='btn-sm btn-indigo' onclick='downloadHistoricalPDF(" + idx + ")'>📥 下載 PDF</button>";
+
+                tbody.innerHTML += "<tr><td>" + item.time + "</td><td>" + item.docNo + "</td><td>" + item.name + "</td><td>" + scoreDisplayHtml + "</td><td>" + item.summary + "</td><td>" + actionBtn + " <button type='button' class='btn-sm btn-red' onclick='deleteSinglePdf(" + idx + ")'>刪除</button></td></tr>";
+            }
+        }
+
+        function deleteSinglePdf(idx) {
+            pdfHistory.splice(idx, 1);
+            saveDataToLocalStorage();
+            renderPdfHistory();
+        }
+
+        function clearPdfHistory() {
+            var currentTarget = document.getElementById('targetName').value.trim();
+            if (confirm("確定要清空當事人 [" + currentTarget + "] 的所有即時違規紀錄嗎？")) {
+                var newPdf = [];
+                for (var i = 0; i < pdfHistory.length; i++) {
+                    if (pdfHistory[i].name !== currentTarget) {
+                        newPdf.push(pdfHistory[i]);
+                    }
+                }
+                pdfHistory = newPdf;
+                saveDataToLocalStorage();
+                renderPdfHistory();
+            }
+        }
+
+        // 初始化載入
+        try {
+            emailHistory = JSON.parse(localStorage.getItem('SDRC_EM_V52') || "[]");
+            pdfHistory = JSON.parse(localStorage.getItem('SDRC_PDF_V52') || "[]");
+            permanentRecords = JSON.parse(localStorage.getItem('SDRC_PERM_RECS_V52') || "[]");
+            
+            var savedPersons = localStorage.getItem('SDRC_PERSON_LIST_V52');
+            if (savedPersons) personList = JSON.parse(savedPersons);
+
+            var savedDeduct = localStorage.getItem('SDRC_DEDUCT_PRESETS_V52');
+            if (savedDeduct) deductPresets = JSON.parse(savedDeduct);
+
+            var savedAdd = localStorage.getItem('SDRC_ADD_PRESETS_V52');
+            if (savedAdd) addPresets = JSON.parse(savedAdd);
+        } catch(e) {}
+        
+        renderPersonDropdown();
+        initPresetDropdowns();
+        setCurrentTime();
+        generateDocNo();
+        updateAllTables();
+        updateUI();
+    </script>
+</body>
+</html>
