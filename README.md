@@ -50,3 +50,42 @@ https://index--72.vercel.app/
  
  --無限累積 Blob 備份引擎： 專為海量 PDF 與高頻率更新的歷史檔案設計。管理員可以使用 📤 匯出備份 將全站數據打包下載，或使用 📥 匯入還原 將舊檔案無損回復。
  --一鍵快取清理： 頂部設有 🧹 清除第四至第八部分 的終極快捷鍵，能瞬間抹除所有歷史追蹤紀錄，方便系統重設或進行季度盤點。
+
+
+
+
+
+
+This website is the "Social Discipline Review Committee - Management System." It's a backend management tool that integrates a database of individuals, dynamic score tracking, automated document generation, and large-capacity backups.
+
+Below is a breakdown of the website's four core systems and detailed functions:
+
+I. Core Data and Integrity Score Control Panel (Part 1) This is the operational hub of the entire website, primarily responsible for handling the identity and score permissions of individuals:
+
+--Dynamic Identity Switching: Features a quick drop-down menu, allowing real-time switching between multiple individuals. Supports on-site modification of Name/ID, account Handle, or direct file deletion, and also allows one-click creation of new roles. --Dual Review Mode Switching: - "⚠ Deduction/Punishment Mode": Once activated, the form switches to punishment settings, handling integrity score deductions. - "🌟 Bonus/Praise Mode": Once activated, the form switches to reward settings, used to commend performance.
+
+--Real-time Integrity Score Tracking: - Administrators can customize the individual's "Total Integrity Score" (the default screen value is 100). - The system will display the "Current Integrity Score" (the individual has 100 points remaining on the screen).
+- It features 🔄 Automatic tracking of past scores; each point increase or decrease is updated in conjunction with historical records.
+
+--Automatic Time and Numbering:
+-⚡ Instantaneous Time Acquisition: Accurately captures the hour, minute, and second of the sending/issuing date with a single click.
+-🎲 Automatic Number Generation: A random algorithm automatically generates unique file numbers for each document.
+
+--Dual-Use 30 Preset Reasons Library: Includes two complete sets of 30 preset reasons for "Discipline" and "Praise." Administrators can quickly add these reasons or create their own and save them to the preset menus for future use.
+
+
+II. Automated Document and Email Output Engine (Parts 2 & 3) After the data is filled in, the system provides a highly efficient "one-click dual-open" output function:
+
+--⚡ Automatic One-Click Data Completion: If the time or number is blank, the system will automatically fill in all required fields. --✅ Confirm Data and Generate PDF: After clicking, the system will immediately draw all the details into the PDF, automatically archive it in the background, and directly trigger the browser to download the official announcement. -- Complete Email Content Replication: The system will automatically format a formal official notification email based on the reward and punishment data you filled in, and provide a shortcut key for "copy the content and archive".
+
+III. Five-Dimensional Historical Records and Global View Table (Parts 4-8) To prevent loopholes, the system breaks down all generated documents and behaviors into five independent tracking blocks:
+
+--4. Global Historical View Table: A comprehensive database across all parties involved. Presents all initiation times, file numbers, parties involved, score changes, and details of the events in a table format. --5. Personalized Email Records: Records emails sent to specific individuals, including sending time, score changes, and content summaries.
+-6. Real-time Violation Display Table: Violations are highlighted with prominent colors and labels. The most convenient feature is the ability to directly download the historical PDF without regenerating it.
+-7 & 8. Past Violations and Awards Records (Separate Streaming):
+- The system completely separates "penalty records" and "reward records" for easy retrieval.
+- Special Anti-Duplicate Image Technology: For long reports, a 3cm margin is specified from the second page onwards to ensure neat layout and no text overlap when printing or transferring multiple pages.
+
+IV. Large-Capacity Blob Backup and Cleanup Mechanism
+
+--Unlimited Cumulative Blob Backup Engine: Designed for massive amounts of PDFs and frequently updated historical files. Administrators can use 📤 to export backups to download all site data in a package, or use 📥 to import and restore old files without loss. --One-click quick cleanup: The top features a 🧹 ultimate shortcut to clear sections four through eight, instantly erasing all historical tracking records for easy system reset or quarterly review.
